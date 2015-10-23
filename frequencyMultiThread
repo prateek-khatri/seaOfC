@@ -4,12 +4,22 @@
 #include <string.h>
 #include <pthread.h>
 
+/******************************
+Structure for storing words
+received from each thread
+******************************/
 struct return_val{
 	char wordlist[100][100];
 	int count[100];
 } *arr;
+
 pthread_t *threads;
 int lines;
+
+/*****************************
+Aggregates Frequency Sum of
+different threads
+*****************************/
 int aggregate(char *a)
 {
 	int sum = 0;
@@ -44,7 +54,10 @@ int aggregate(char *a)
 	return sum;
 }
 	
-
+/**************************
+Function executed by each
+thread on seperate line.
+**************************/
 void *word_count(void* num)
 { 
 	
