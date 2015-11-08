@@ -141,14 +141,15 @@ int main (void)
 	fclose(fp);
 	fclose(data);
 	
-	
+	//GNU PLOT
 	FILE *gnuplot = popen ("gnuplot -persistent", "w");
 	fprintf(gnuplot,"set title \"Frames: %d\"\n",num);
 	fprintf(gnuplot,"set yrange [0:%d]\n",memRef);
 	fprintf(gnuplot,"plot 'tmp.dat' using 1:2 with lines\n");
 	fclose(gnuplot);
+	//CLEANUP TMP FILE
 	remove("tmp.dat");
-	//system("gnuplot -p -e \"plot 'tmp.dat' using 1:2 with lines\"");
+	
 	free(pageTable);
 	free(frames);
 }
