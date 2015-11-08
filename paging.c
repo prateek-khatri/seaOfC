@@ -49,7 +49,14 @@ int main (void)
 	int indexCounter = 0;
 	bool frameFull = false;
 	FILE *fp = fopen("file.txt","r");
-	if(!fp) printf("FILE ERROR\n");
+	FILE *data = fopen("tmp.dat","w");
+	int memRef = 0;
+	
+	if(!fp || !data)
+	{
+		 printf("FILE ERROR\n");
+		 return -1;
+	 }
 	
 	printf("Enter the Number of Pages: \n");
 	int num;
@@ -74,18 +81,24 @@ int main (void)
 	int request;
 	while(!feof(fp))
 	{
+		
 		fscanf(fp,"%d",&request);
+		memRef++;
+		if(memRef%1000 == 0)
+		{
+			fprintf(data,"%d %d\n",memRef,faultCounter);
+		}
 		if(pageTable[request].valid == false)
 		{
 			(frames[indexCounter]).pageNumber = request;
 			(frames[indexCounter]).age = num - indexCounter;
 			(pageTable[request]).frameNumber = indexCounter;
 			(pageTable[request]).valid = true;
-		
 			if(indexCounter == num-1) break;
 			faultCounter++;
 			indexCounter++;
 		}
+		
 		
 	}
 	
@@ -95,7 +108,7 @@ int main (void)
 		fscanf(fp,"%d",&request);
 		//Increase age of entries with every memory reference
 		agePlus(num);
-		
+		memRef++;
 		//1. Assume all Frames occupied.
 		//2. New Request?
 		//3. Valid in page table?
@@ -117,11 +130,18 @@ int main (void)
 			pageTable[request].frameNumber = old;
 			pageTable[request].valid = true;
 		}
+		
+		if(memRef%1000 == 0)
+		{
+			fprintf(data,"%d %d\n",memRef,faultCounter);
+		}
 	}
 	
 	printf("Page Faults: %d\n",faultCounter);
 	
 	fclose(fp);
+	fclose(data);
+	system("gnuplot -p -e \"plot 'tmp.dat' using 1:2 with lines\"");
 	free(pageTable);
 	free(frames);
 }
