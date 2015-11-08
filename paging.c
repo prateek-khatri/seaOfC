@@ -14,6 +14,7 @@ struct frames
 	int age;
 } *frames;
 
+//Increments age of all frame entries present
 inline void agePlus(int num)
 {
 	int i;
@@ -23,13 +24,32 @@ inline void agePlus(int num)
 	}
 }
 
+//Returns the index of the oldest frame
+inline int findOldest(int num)
+{
+	int i;
+	int oldestIndex;
+	oldestIndex = 0;
+	int age = 0;
+	for(i=0;i<num;i++)
+	{
+		if(frames[i].age > age)
+		{
+			age = frames[i].age;
+			oldestIndex = i;
+		}
+	}
+	return oldestIndex;
+}
+
 int main (void)
 {
 	int i;
-	int faultCounter = 0;
+	int faultCounter = 1;
 	int indexCounter = 0;
 	bool frameFull = false;
 	FILE *fp = fopen("file.txt","r");
+	if(!fp) printf("FILE ERROR\n");
 	
 	printf("Enter the Number of Pages: \n");
 	int num;
@@ -55,19 +75,52 @@ int main (void)
 	while(!feof(fp))
 	{
 		fscanf(fp,"%d",&request);
+		if(pageTable[request].valid == false)
+		{
+			(frames[indexCounter]).pageNumber = request;
+			(frames[indexCounter]).age = num - indexCounter;
+			(pageTable[request]).frameNumber = indexCounter;
+			(pageTable[request]).valid = true;
 		
-		(frames[indexCounter]).pageNumber = request;
-		(frames[indexCounter]).age = num - indexCounter;
-		(pageTable[request]).frameNumber = indexCounter;
-		(pageTable[request]).valid = true;
-		
-		if(indexCounter == num-1) break;
-		faultCounter++;
-		indexCounter++;
+			if(indexCounter == num-1) break;
+			faultCounter++;
+			indexCounter++;
+		}
 		
 	}
 	
-	//TESTING GITHUB
+	//This is where the fun starts
+	while(!feof(fp))
+	{
+		fscanf(fp,"%d",&request);
+		//Increase age of entries with every memory reference
+		agePlus(num);
+		
+		//1. Assume all Frames occupied.
+		//2. New Request?
+		//3. Valid in page table?
+		if(pageTable[request].valid == false)
+		{
+			
+			faultCounter++;
+			int old = findOldest(num);
+			
+		
+			//1. Mark Page Swapped out as Invalid
+			//2. Store new Page in Frame
+			//3. Mark new Page as valid
+			//4. update page table
+			
+			pageTable[frames[old].pageNumber].valid = false;
+			frames[old].pageNumber = request;
+			frames[old].age = 0;
+			pageTable[request].frameNumber = old;
+			pageTable[request].valid = true;
+		}
+	}
+	
+	printf("Page Faults: %d\n",faultCounter);
+	
 	fclose(fp);
 	free(pageTable);
 	free(frames);
