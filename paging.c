@@ -147,6 +147,7 @@ int main (void)
 	fprintf(gnuplot,"set yrange [0:%d]\n",memRef);
 	fprintf(gnuplot,"plot 'tmp.dat' using 1:2 with lines\n");
 	fclose(gnuplot);
+	remove("tmp.dat");
 	//system("gnuplot -p -e \"plot 'tmp.dat' using 1:2 with lines\"");
 	free(pageTable);
 	free(frames);
