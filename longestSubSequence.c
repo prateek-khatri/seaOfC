@@ -1,3 +1,9 @@
+/***************************************
+ * Find the Longest Common Subsequence
+ * in Two Given Strings X and Y using
+ * DYNAMIC PROGRAMMING
+ ***************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #define MAX(a,b) ((a>b)?(a):(b))
