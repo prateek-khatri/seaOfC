@@ -15,23 +15,22 @@ void findLCS(char *x,char *y,int m,int n)
 {
 	int L[m+1][n+1]; // Table for Dynamic Approach
 	int i,j;
-	for(i=0;i<=m;i++) //Set first Row as 0
-	{
-		L[i][0] = 0;
-	}
-	for(j=0;j<=n;j++) //Set first Column as 0
-	{
-		L[0][j] = 0;
-	}
-	int row,col;
 	int maxnum = 0;
-	for(i=1;i<=m;i++)
+	int row,col;
+	for(i = 0;i <= m; i++)
 	{
-		for(j=1;j<=n;j++)
+		for(j = 0;j <= n; j++)
 		{
-			if(x[i]==y[j])
+			if(i==0 || j==0)
+			{
+				L[i][j] = 0;
+			}
+			else if(x[i-1] == y[j-1])
 			{
 				L[i][j] = 1 + L[i-1][j-1];
+				maxnum = MAX(L[i][j],maxnum);
+				row = i;
+				col = j;
 			}
 			else
 			{
@@ -40,11 +39,30 @@ void findLCS(char *x,char *y,int m,int n)
 		}
 	}
 	
+	char buf[maxnum];
+	int size = 0;
+	for(j=col-1;j>=col-maxnum;j--)
+	{
+		buf[size++] = y[j];
+	}
+	size = size-1;
+	
 	//find max number in table
 	//find its index
 	//backtrack to find sequence
+	if(size > -1)
+	{
+		printf("\nThe Longest Common Substring is: ");
 	
-	printf("The Longest Common Substring is: %d %d\n\n",row,col);
+	for(i=size;i>=0;i--)
+	{
+		printf("%c",buf[i]);
+	}
+	printf("\n\n");
+	}
+	else
+	printf("\nNo Common Substring\n\n");
+	
 }
 
 
@@ -64,6 +82,7 @@ int main(void)
 	x_size -=1;
 	while(y[y_size++] != '\0');
 	y_size -=1;
+	
 	
 	findLCS(x,y,x_size,y_size);
 	
