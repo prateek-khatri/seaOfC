@@ -21,25 +21,25 @@ void findLCS(char *x,char *y,int m,int n)
 	{
 		for(j = 0;j <= n; j++)
 		{
-			if(i==0 || j==0)
+			if(i==0 || j==0 //Pad Outer Row/Col with 0
 			{
 				L[i][j] = 0;
 			}
-			else if(x[i-1] == y[j-1])
+			else if(x[i-1] == y[j-1]) //If match increment value
 			{
 				L[i][j] = 1 + L[i-1][j-1];
-				maxnum = MAX(L[i][j],maxnum);
-				row = i;
+				maxnum = MAX(L[i][j],maxnum); //SAVE max number
+				row = i; //Save coordinates
 				col = j;
 			}
 			else
 			{
-				L[i][j] = 0;
+				L[i][j] = 0; //No match then 0
 			}
 		}
 	}
 	
-	char buf[maxnum];
+	char buf[maxnum]; //buffer to store substring in reverse
 	int size = 0;
 	for(j=col-1;j>=col-maxnum;j--)
 	{
@@ -47,14 +47,12 @@ void findLCS(char *x,char *y,int m,int n)
 	}
 	size = size-1;
 	
-	//find max number in table
-	//find its index
-	//backtrack to find sequence
+
 	if(size > -1)
 	{
 		printf("\nThe Longest Common Substring is: ");
 	
-	for(i=size;i>=0;i--)
+	for(i=size;i>=0;i--) //Print Substring in right Order
 	{
 		printf("%c",buf[i]);
 	}
