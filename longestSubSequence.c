@@ -52,6 +52,7 @@ void findLCS(char *x,char *y,int m,int n)
 		}
 	}
 	printf("\nThe Longest Common Subsequence is: %s\n\n",sequence);
+	
 }
 
 
