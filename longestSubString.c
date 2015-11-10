@@ -8,12 +8,43 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAX(a,b) ((a>b)?(a):(b))
+#define MIN(a,b) ((a<b)?(a):(b))
 
 
 void findLCS(char *x,char *y,int m,int n)
 {
+	int L[m+1][n+1]; // Table for Dynamic Approach
+	int i,j;
+	for(i=0;i<=m;i++) //Set first Row as 0
+	{
+		L[i][0] = 0;
+	}
+	for(j=0;j<=n;j++) //Set first Column as 0
+	{
+		L[0][j] = 0;
+	}
+	int row,col;
+	int maxnum = 0;
+	for(i=1;i<=m;i++)
+	{
+		for(j=1;j<=n;j++)
+		{
+			if(x[i]==y[j])
+			{
+				L[i][j] = 1 + L[i-1][j-1];
+			}
+			else
+			{
+				L[i][j] = 0;
+			}
+		}
+	}
 	
+	//find max number in table
+	//find its index
+	//backtrack to find sequence
 	
+	printf("The Longest Common Substring is: %d %d\n\n",row,col);
 }
 
 
