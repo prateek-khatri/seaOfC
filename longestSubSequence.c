@@ -3,7 +3,7 @@
 #define MAX(a,b) ((a>b)?(a):(b))
 
 
-int findLCS(char *x,char *y,int m,int n)
+void findLCS(char *x,char *y,int m,int n)
 {
 	int L[m+1][n+1]; // Table for Dynamic Approach
 	int i,j;
@@ -30,8 +30,22 @@ int findLCS(char *x,char *y,int m,int n)
 			}
 		}
 	}
-	//the length of LCS is in the last position of the Table
-	return L[m][n];
+	//String to Store LCS
+	char sequence[L[m][n]];
+	int seq_size = L[m][n] - 1;
+	////////BACKTRACK TO FIND SEQUENCE///////////////////
+	for(i=m;i>=0;i--)
+	{
+		for(j=n;j>0;j--)
+		{
+			if(L[i][j] > L[i][j-1])
+			{
+				sequence[seq_size--] = y[j-1];
+				i--;
+			}
+		}
+	}
+	printf("\nThe Longest Common Subsequence is: %s\n\n",sequence);
 }
 
 
@@ -52,9 +66,9 @@ int main(void)
 	while(y[y_size++] != '\0');
 	y_size -=1;
 	
-	int length = findLCS(x,y,x_size,y_size);
+	findLCS(x,y,x_size,y_size);
 	
-	printf("The Length of the Longest Common Subsequence is: %d\n",length);
+	
 	return 0;
 	
 }
