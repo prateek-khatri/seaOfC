@@ -21,7 +21,7 @@ void findLCS(char *x,char *y,int m,int n)
 	{
 		for(j = 0;j <= n; j++)
 		{
-			if(i==0 || j==0 //Pad Outer Row/Col with 0
+			if(i==0 || j==0) //Pad Outer Row/Col with 0
 			{
 				L[i][j] = 0;
 			}
