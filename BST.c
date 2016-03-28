@@ -10,6 +10,106 @@ struct Node
 	struct Node *left;
 	struct Node *right;
 };
+struct ListNode
+{
+	struct Node* treeNode;
+	struct ListNode * next;
+};
+//Global Linked List Head for Level Order Traversal
+struct ListNode* queue;
+struct ListNode* head = NULL;
+struct ListNode* tail = NULL;
+
+//******FUNCTION PROTOTYPES***********
+void insertInQueue(struct Node* ptr);
+void pop();
+struct Node* front();
+bool isEmpty();
+struct Node* getNewNode(int val);
+struct ListNode* getNewListNode(struct Node* ptr);
+struct Node* insertNode(struct Node* root,int val);
+void printInorder(struct Node* root);
+void printPostOrder(struct Node* root);
+void printPreOrder(struct Node* root);
+void printLevelOrder(struct Node* root);
+bool search(struct Node* root,int val);
+void destroyTree(struct Node *root);
+//************************************
+
+/*
+* Queue Implementation Using Linked List
+* Functioanlity:
+* 1. Insert
+* 2. Pop
+* 3. Front
+* 4. Destroy
+* 5. isEmpty
+*/
+
+void insertInQueue(struct Node* ptr)
+{
+	if(head == NULL)
+	{
+		//no element
+		head = queue;
+		tail = queue;
+		queue->treeNode = ptr;
+		return;
+	}
+	else if(head == tail)
+	{
+		queue->next = getNewListNode(ptr);
+		tail = queue->next;
+		return;
+	}
+	else
+	{
+		tail->next = getNewListNode(ptr);
+		tail = tail->next;
+		return;
+	}
+}
+
+void pop()
+{
+	if(head == NULL)
+	{
+		return;
+	}
+	else if(head == tail)
+	{
+
+		head->treeNode = NULL;
+		head->next = NULL;
+		head = NULL;
+		tail = NULL;
+		return;
+	}
+	else
+	{
+		struct ListNode* temp = head;
+		head = head->next;
+		free(temp);
+		return;
+	}
+}
+
+struct Node* front()
+{
+	return head->treeNode;
+}
+bool isEmpty()
+{
+	if(head == NULL)
+	{
+		return true;
+	}
+	else 
+	{
+		return false;
+	}
+}
+//************END QUEUE IMPLEMENTATION****************************
 
 //Allocate Memory for New Node
 struct Node* getNewNode(int val)
@@ -19,6 +119,13 @@ struct Node* getNewNode(int val)
 	ptr->left = NULL;
 	ptr->right = NULL;
 	return ptr;
+}
+struct ListNode* getNewListNode(struct Node* ptr)
+{
+	struct ListNode* newNode = (struct ListNode *) malloc(sizeof(struct ListNode));
+	newNode->treeNode = ptr;
+	newNode->next = NULL;
+	return newNode;
 }
 //Insert Node in Binary Search Tree
 struct Node* insertNode(struct Node* root,int val)
@@ -42,7 +149,7 @@ void printInorder(struct Node* root)
 {
 	if(root == NULL) return;
 	printInorder(root->left);
-	printf("%d\n",root->val);
+	printf("%d ",root->val);
 	printInorder(root->right);
 }
 void printPostOrder(struct Node* root)
@@ -50,14 +157,38 @@ void printPostOrder(struct Node* root)
 	if(root == NULL) return;
 	printPostOrder(root->left);
 	printPostOrder(root->right);
-	printf("%d\n",root->val);
+	printf("%d ",root->val);
 }
 void printPreOrder(struct Node*root)
 {
 	if(root == NULL) return;
-	printf("%d\n",root->val);
+	printf("%d ",root->val);
 	printPreOrder(root->left);
 	printPreOrder(root->right);
+}
+void printLevelOrder(struct Node* root)
+{
+	if(root == NULL)
+	{
+		return;
+	}
+	insertInQueue(root);
+	while(!isEmpty())
+	{
+		struct Node* current = front();
+		printf("%d ",current->val);
+		if(current->left != NULL)
+		{
+			insertInQueue(current->left);
+		}
+		if(current->right != NULL)
+		{
+			insertInQueue(current->right);
+		}
+		pop();
+	}
+
+
 }
 bool search(struct Node* root,int val)
 {
@@ -78,8 +209,19 @@ bool search(struct Node* root,int val)
 		return search(root->right,val);
 	}
 }
+void destroyTree(struct Node * root)
+{
+	if(root == NULL)
+	{
+		return;
+	}
+	destroyTree(root->left);
+	destroyTree(root->right);
+	free(root);
+}
 int main(void)
 {
+	queue = (struct ListNode *)malloc(sizeof(struct ListNode));
 	struct Node * root = NULL; //Tree is Empty
 	root = insertNode(root,15);
 	root = insertNode(root,10);
@@ -91,19 +233,22 @@ int main(void)
 	
 	printf("Printing In-Order: \n");
 	printInorder(root);
-	printf("Printing Post-Order: \n");
+	printf("\nPrinting Post-Order: \n");
 	printPostOrder(root);
-	printf("Printing Pre-Order: \n");
+	printf("\nPrinting Pre-Order: \n");
 	printPreOrder(root);
+	printf("\nPrinting Level-Order: \n");
+	printLevelOrder(root);
+	printf("\n");
 
-	if(search(root,11))
-	{
-		printf("Value Found\n");
-	}
-	else
-	{
-		printf("Value Not Found\n");
-	}
-
+	// if(search(root,11))
+	// {
+	// 	printf("Value Found\n");
+	// }
+	// else
+	// {
+	// 	printf("Value Not Found\n");
+	// }
+	destroyTree(root);
 	return 0;
 }
