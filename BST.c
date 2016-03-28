@@ -48,16 +48,16 @@ void printInorder(struct Node* root)
 void printPostOrder(struct Node* root)
 {
 	if(root == NULL) return;
-	printInorder(root->left);
-	printInorder(root->right);
+	printPostOrder(root->left);
+	printPostOrder(root->right);
 	printf("%d\n",root->val);
 }
 void printPreOrder(struct Node*root)
 {
 	if(root == NULL) return;
 	printf("%d\n",root->val);
-	printInorder(root->left);
-	printInorder(root->right);
+	printPreOrder(root->left);
+	printPreOrder(root->right);
 }
 bool search(struct Node* root,int val)
 {
