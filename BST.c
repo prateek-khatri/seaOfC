@@ -219,6 +219,48 @@ void destroyTree(struct Node * root)
 	destroyTree(root->right);
 	free(root);
 }
+void findKthSmallest(struct Node * root, int *returnValue,int * k)
+{
+	if(root == NULL || (*k) <=0)
+	{
+		return;
+	}
+
+	findKthSmallest(root->left,returnValue,k);
+
+	if((*k)<=0)
+	{
+		return;
+	}
+	(*k)--;
+	if((*k)==0)
+	{
+		*returnValue = root->val;
+		return;
+	}
+	findKthSmallest(root->right,returnValue,k);
+}
+void findKthLargest(struct Node * root, int *returnValue,int * k)
+{
+	if(root == NULL || (*k) <=0)
+	{
+		return;
+	}
+
+	findKthLargest(root->right,returnValue,k);
+
+	if((*k)<=0)
+	{
+		return;
+	}
+	(*k)--;
+	if((*k)==0)
+	{
+		*returnValue = root->val;
+		return;
+	}
+	findKthLargest(root->left,returnValue,k);
+}
 int main(void)
 {
 	queue = (struct ListNode *)malloc(sizeof(struct ListNode));
@@ -240,6 +282,22 @@ int main(void)
 	printf("\nPrinting Level-Order: \n");
 	printLevelOrder(root);
 	printf("\n");
+
+	printf("Enter Value for Kth Smallest: ");
+	int k;
+	scanf("%d",&k);
+	int returnValue = 0;
+	findKthSmallest(root,&returnValue,&k);
+	printf("The %dth smallest Element is %d\n",k,returnValue);
+	
+
+	printf("\nEnter Value for Kth Largest: ");
+	scanf("%d",&k);
+	returnValue = 0;
+	findKthLargest(root,&returnValue,&k);
+	printf("The %dth largest Element is %d\n",k,returnValue);
+
+
 
 	// if(search(root,11))
 	// {
