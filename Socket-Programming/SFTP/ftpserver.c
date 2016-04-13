@@ -5,56 +5,58 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+/*********FUNCTION PROTOTYPES*********/
+void checkConnectionStatus(int connection_status);
+
+
 int main(int argc, char *argv[])
 {
-
-	if(argc<2)
-	{
-		perror("Not Enough Arguments! Usage:<ftpserver> PORT_NUM\n");
-		exit(1);
-	}
-	/* NETWORK VARIABLES */
 	int network_socket,client_socket;
-	int connection_status;
 	struct sockaddr_in server_address;
-	char const * const server_port = argv[1];
-	char buffer[5];
-	char fileName[30];
-	char temp = ' ';
+	int connection_status;
 
-	/* Fill Address Structure */
 	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(atoi(server_port));
+	server_address.sin_port = htons(atoi(argv[1]));
 	server_address.sin_addr.s_addr = INADDR_ANY;
 
-	/* CREATE SOCKET */
 	network_socket = socket(AF_INET,SOCK_STREAM,0);
 
-	/* BIND SOCKET - ACCEPT CONNECTION */
 	bind(network_socket, (struct sockaddr*)&server_address,sizeof(server_address));
-	listen(network_socket,5);
-	printf("Waiting for Connection...\n");
+	listen(network_socket,2);
+	printf("Waiting for Connection..\n");
+
 	client_socket = accept(network_socket,NULL,NULL);
 
-	recv(network_socket,&fileName,sizeof(char)*30,0);
-	
-	connection_status = send(network_socket,"OK",sizeof(char)*2,0);
+	char buf[50];
+	connection_status = recv(client_socket,buf,50,0);
+	checkConnectionStatus(connection_status);
+	buf[connection_status] = '\0';
+	printf("Recv: %s\n",buf);
 
-	printf("Filname Received: %s\n",fileName);
+	char *received = "received";
+	connection_status = send(client_socket,received, sizeof(char)*strlen(received),0);
+	checkConnectionStatus(connection_status);
+	printf("Received Sent...\n");
 
-	/* CREATE FILE IN APPEND MODE */
-	FILE *output = fopen(fileName,"a");
+	connection_status = recv(client_socket,buf,50,0);
+	checkConnectionStatus(connection_status);
+	buf[connection_status] = '\0';
+	printf("Recv: %s\n",buf);
 
-	/*Start Reading Data */
-	while(recv(network_socket,&temp,sizeof(char), MSG_PEEK | MSG_DONTWAIT) != 0)
-	{
-		recv(network_socket,&buffer,sizeof(char)*5,0);
-		printf("%s",buffer);
-		fwrite(buffer,sizeof(char),sizeof(char)*5,output);
+	connection_status = send(client_socket,received, sizeof(char)*strlen(received),0);
+	checkConnectionStatus(connection_status);
+	printf("Received Sent...\n");
 
-	}
-	fclose(output);
+	close(client_socket);
 	close(network_socket);
-
 	return 0;
+
+}
+void checkConnectionStatus(int connection_status)
+{
+	if(connection_status < 0)
+	{
+		perror("Fail to Send/Receive Message to/from Server!\n");
+		exit(1);
+	}
 }
