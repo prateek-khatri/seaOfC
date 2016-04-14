@@ -7,6 +7,7 @@
 
 /*********FUNCTION PROTOTYPES*********/
 void checkConnectionStatus(int connection_status);
+int findLength(char const * const inputFile);
 
 //Usage: <CLIENT> <input file> <output file> <server IP> <server port>
 int main(int argc, char *argv[])
@@ -22,10 +23,12 @@ int main(int argc, char *argv[])
 	int network_socket;
 	int connection_status;
 	struct sockaddr_in server_address;
+	int inputFileLength;
 	char const * const port = argv[4];
 	char const * const serverIP = argv[3];
 	char const * const outputFile = argv[2];
 	char const * const inputFile = argv[1];
+	char * inputFileData;
 
 	/* Create Network Socket */
 	network_socket = socket(AF_INET,SOCK_STREAM,0);
@@ -48,11 +51,31 @@ int main(int argc, char *argv[])
 	checkConnectionStatus(connection_status);
 	printf("Output File Name send Complete!\n");
 
+	/* Find Length of Input File */
+	inputFileLength = findLength(inputFile);
+
+	/* Allocate Memory for File - Easy Method*/
+	inputFileData = (char*) malloc(sizeof(char)*inputFileLength);
+	FILE * fp = fopen(inputFile,"r");
+	fread(inputFileData,inputFileLength+1,1,fp);
+
+	/* IF FILE IS REALLY BIG READ IT CHUNK BY CHUNK */
+	/* FOR ASSIGNMENT PURPOSE ONLY SENDING WILL BE DONE CHUNK BY CHUNK */
+
 
 	close(network_socket);
 
 	return 0;
 
+}
+int findLength(char const * const inputFile)
+{
+	FILE * fp = fopen(inputFile,"r");
+	fseek(fp,0,SEEK_END);
+	int length = ftell(fp);
+	fseek(fp,0,SEEK_SET);
+	fclose(fp);
+	return length;
 }
 
 void checkConnectionStatus(int connection_status)
