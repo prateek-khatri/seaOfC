@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
 	struct sockaddr_in server_address;
 	char outputFileName[30];
 	char const * const port = argv[1];
+	char streamBuffer[10];
+	char fileBuffer[5];
 
 	/* Create a Socket */
 	network_socket = socket(AF_INET,SOCK_STREAM,0);
@@ -50,8 +52,12 @@ int main(int argc, char *argv[])
 	outputFileName[connection_status] = '\0';
 	printf("Output File Name Received: %s\n",outputFileName);
 
+	connection_status = send(client_socket,"ACK",3*sizeof(char),0);
+	checkConnectionStatus(connection_status);
+	printf("ACK Sent\n");
 	/* Create File for Storing Data */
 	FILE * fp = fopen(outputFileName,"w");
+
 
 
 	/* CleanUp Code */
