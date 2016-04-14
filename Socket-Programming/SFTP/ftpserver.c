@@ -50,6 +50,12 @@ int main(int argc, char *argv[])
 	outputFileName[connection_status] = '\0';
 	printf("Output File Name Received: %s\n",outputFileName);
 
+	/* Create File for Storing Data */
+	FILE * fp = fopen(outputFileName,"w");
+
+
+	/* CleanUp Code */
+	fclose(fp);
 	close(client_socket);
 	close(network_socket);
 
