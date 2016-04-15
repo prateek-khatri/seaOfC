@@ -5,9 +5,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 /*********FUNCTION PROTOTYPES*********/
 void checkConnectionStatus(int connection_status);
+int sendACK(int socketFD);
 
 //Usage: <SERVER> <port>
 int main(int argc, char *argv[])
@@ -27,7 +29,7 @@ int main(int argc, char *argv[])
 	char const * const port = argv[1];
 	char streamBuffer[10];
 	char fileBuffer[5];
-
+	int fileSize;
 	/* Create a Socket */
 	network_socket = socket(AF_INET,SOCK_STREAM,0);
 	checkConnectionStatus(network_socket);
@@ -53,28 +55,50 @@ int main(int argc, char *argv[])
 	outputFileName[connection_status] = '\0';
 	printf("Output File Name Received: %s\n",outputFileName);
 
-	connection_status = send(client_socket,"ACK",3*sizeof(char),0);
+	connection_status = sendACK(client_socket);
+
+	/*Receive File Size */
+	char length[3];
+	connection_status = recv(client_socket,length,3,0);
 	checkConnectionStatus(connection_status);
-	printf("ACK Sent\n");
+	length[connection_status]= '\0';
+	fileSize = atoi(length);
+	printf("File Size Received: %d\n",fileSize);
+	/*Send ACK for File Size */
+	connection_status = sendACK(client_socket);
+
 	/* Create File for Storing Data */
 	FILE * fp = fopen(outputFileName,"w");
-	sleep(1);
 
-	while(1)
+
+	while(fileSize != 0)
 	{
-
+		bool flag = false;
 		connection_status = recv(client_socket,streamBuffer,sizeof(char)*10,0);
 		checkConnectionStatus(connection_status);
 		printf("Chunk Received!\n");
+		int i;
+		for(i=0;i<connection_status;i++)
+		{
+			fputc(streamBuffer[i],fp);
+			printf("%c",streamBuffer[i]);
+		}
 
-		fwrite(streamBuffer,11,1,fp);
-		printf("%s\n",streamBuffer);
+		printf("\n");
 
+		if(connection_status < 10)
+		{
+			flag=true;
+		}
 
 		printf("Sending ACK\n");
 		connection_status = send(client_socket,"ACK",3*sizeof(char),0);
 		checkConnectionStatus(connection_status);
 		printf("ACK Sent\n");
+		if(flag)
+		{
+			break;
+		}
 	}
 
 
@@ -83,7 +107,7 @@ int main(int argc, char *argv[])
 	fclose(fp);
 	close(client_socket);
 	close(network_socket);
-
+	printf("Sucessfully Exited!\n");
 	return 0;
 }
 void checkConnectionStatus(int connection_status)
@@ -93,4 +117,12 @@ void checkConnectionStatus(int connection_status)
 		perror("Fail to Establish Socket or Connection!\n");
 		exit(1);
 	}
+}
+
+int sendACK(int socketFD)
+{
+	int chk = send(socketFD,"ACK",sizeof(char)*3,0);
+	checkConnectionStatus(chk);
+	printf("ACK Sent!\n");
+	return chk;
 }
