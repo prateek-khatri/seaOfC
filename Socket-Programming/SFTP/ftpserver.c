@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 /*********FUNCTION PROTOTYPES*********/
 void checkConnectionStatus(int connection_status);
@@ -57,6 +58,24 @@ int main(int argc, char *argv[])
 	printf("ACK Sent\n");
 	/* Create File for Storing Data */
 	FILE * fp = fopen(outputFileName,"w");
+	sleep(1);
+
+	while(1)
+	{
+
+		connection_status = recv(client_socket,streamBuffer,sizeof(char)*10,0);
+		checkConnectionStatus(connection_status);
+		printf("Chunk Received!\n");
+
+		fwrite(streamBuffer,11,1,fp);
+		printf("%s\n",streamBuffer);
+
+
+		printf("Sending ACK\n");
+		connection_status = send(client_socket,"ACK",3*sizeof(char),0);
+		checkConnectionStatus(connection_status);
+		printf("ACK Sent\n");
+	}
 
 
 
