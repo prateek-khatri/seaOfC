@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
 	connection_status = sendACK(client_socket);
 
 	/*Receive File Size */
-	char length[3];
-	connection_status = recv(client_socket,length,3,0);
+	char length[10];
+	connection_status = recv(client_socket,length,10,0);
 	checkConnectionStatus(connection_status);
 	length[connection_status]= '\0';
 	fileSize = atoi(length);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	connection_status = sendACK(client_socket);
 
 	/* Create File for Storing Data */
-	FILE * fp = fopen(outputFileName,"w");
+	FILE * fp = fopen(outputFileName,"wb");
 
 
 	while(fileSize != 0)
@@ -80,9 +80,10 @@ int main(int argc, char *argv[])
 		int i;
 		for(i=0;i<connection_status;i++)
 		{
-			fputc(streamBuffer[i],fp);
+			//fputc(streamBuffer[i],fp);
 			printf("%c",streamBuffer[i]);
 		}
+		fwrite(streamBuffer,connection_status,1,fp);
 
 		printf("\n");
 
