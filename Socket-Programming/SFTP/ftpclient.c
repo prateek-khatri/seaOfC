@@ -69,14 +69,21 @@ int main(int argc, char *argv[])
 
 	/* Allocate Memory for File - Easy Method*/
 	inputFileData = (char*) malloc(sizeof(char)*inputFileLength);
-	FILE * fp = fopen(inputFile,"r");
+	FILE * fp = fopen(inputFile,"rb");
 	fread(inputFileData,inputFileLength+1,1,fp);
 
 	/*Send Number of Bytes to be Sent to Server */
 	printf("File Length Sent: %d\n",inputFileLength);
 	char length[10];
 	sprintf(length,"%d",inputFileLength-1);
-	connection_status = sendReceive(SEND,network_socket,length,3*sizeof(char));
+	int temp = inputFileLength;
+	int count =0;
+	while(temp!=0)
+	{
+		count++;
+		temp = temp/10;
+	}
+	connection_status = sendReceive(SEND,network_socket,length,count*sizeof(char));
 
 	/*Wait for ACK for File Size */
 	printf("Waiting for ACK\n");
