@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 		bool flag = false;
 		connection_status = recv(client_socket,streamBuffer,sizeof(char)*10,0);
 		checkConnectionStatus(connection_status);
-		printf("Chunk Received!\n");
+		printf("Chunk Received! - %d\n",connection_status);
 		int i;
 		for(i=0;i<connection_status;i++)
 		{
