@@ -71,14 +71,14 @@ int main(int argc, char *argv[])
 	FILE * fp = fopen(outputFileName,"wb");
 
 
-	while(fileSize != 0)
+	while(fileSize > 0)
 	{
 		bool flag = false;
 		connection_status = recv(client_socket,streamBuffer,sizeof(char)*10,0);
 		checkConnectionStatus(connection_status);
 		printf("Chunk Received! - %d\n",connection_status);
 		int i;
-		for(i=0;i<connection_status;i++)
+		for(i=0;i<connection_status;i++,fileSize--)
 		{
 			//fputc(streamBuffer[i],fp);
 			printf("%c",streamBuffer[i]);
