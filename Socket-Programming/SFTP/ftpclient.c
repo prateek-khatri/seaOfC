@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
 	char * outputFile = argv[2];
 	char const * const inputFile = argv[1];
 	char * inputFileData;
-	char streamBuffer[11];
 	char tempBuffer[4];
 	tempBuffer[3] = '\0';
 
@@ -89,15 +88,9 @@ int main(int argc, char *argv[])
 	int i,j;
 	if(inputFileLength < 10)
 	{
-		for(i=0;i<inputFileLength;i++)
-		{
-			streamBuffer[i] = inputFileData[i];
-		}
-		
 
-		connection_status = sendReceive(SEND,network_socket,streamBuffer,strlen(streamBuffer));
-		streamBuffer[i] = '\0';
-		printf("Stream Buffer: %s\n",streamBuffer);
+		connection_status = sendReceive(SEND,network_socket,inputFileData,inputFileLength);
+		printf("Stream Buffer: %s\n",inputFileData);
 		printf("Waiting for ACK\n");
 		connection_status = sendReceive(RECEIVE,network_socket,tempBuffer,3);
 
@@ -106,14 +99,9 @@ int main(int argc, char *argv[])
 	{	
 		for(i=0;i<inputFileLength;i +=10)
 		{
-			for(j=i;j-i<10 && j< inputFileLength; j++)
-			{
-				streamBuffer[j-i] = inputFileData[j];
-			}
-			streamBuffer[j-i] = '\0';
-			printf("Stream buffer: %s\n",streamBuffer);
-
-			connection_status = sendReceive(SEND,network_socket,streamBuffer,strlen(streamBuffer));
+			char *streamBuffer = &inputFileData[i];
+			printf("Sending Chunk...\n");
+			connection_status = sendReceive(SEND,network_socket,streamBuffer,10);
 			printf("Waiting for ACK\n");
 			connection_status = sendReceive(RECEIVE,network_socket,tempBuffer,3);
 		}
