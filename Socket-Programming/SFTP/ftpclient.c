@@ -97,14 +97,25 @@ int main(int argc, char *argv[])
 	}
 	else
 	{	
-		for(i=0;i<inputFileLength;i +=10)
+		for(i=0;i<inputFileLength; i +=10)
 		{
+
 			char *streamBuffer = &inputFileData[i];
 			printf("Sending Chunk...\n");
-			connection_status = sendReceive(SEND,network_socket,streamBuffer,10);
-			printf("Waiting for ACK\n");
-			connection_status = sendReceive(RECEIVE,network_socket,tempBuffer,3);
+			if(inputFileLength - i < 10)
+			{
+				connection_status = sendReceive(SEND,network_socket,streamBuffer,inputFileLength-i);
+	
+			}
+			else
+			{
+				connection_status = sendReceive(SEND,network_socket,streamBuffer,10);
+				printf("Waiting for ACK\n");
+				connection_status = sendReceive(RECEIVE,network_socket,tempBuffer,3);
+			}
+			
 		}
+
 
 	}
 	
