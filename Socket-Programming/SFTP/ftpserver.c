@@ -80,9 +80,9 @@ int main(int argc, char *argv[])
 		int i;
 		for(i=0;i<connection_status;i++,fileSize--)
 		{
-			//fputc(streamBuffer[i],fp);
 			printf("%c",streamBuffer[i]);
 		}
+
 		fwrite(streamBuffer,connection_status,1,fp);
 
 		printf("\n");
