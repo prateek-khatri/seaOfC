@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <stdbool.h>
+#include <stdbool.h> 
 
 
 /* GLOBAL DEFINISIONS */
