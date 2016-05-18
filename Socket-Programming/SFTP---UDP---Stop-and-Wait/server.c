@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <stdbool.h> 
+#include <stdbool.h>
 
 
 /* GLOBAL DEFINISIONS */
@@ -61,13 +61,24 @@ int main(int argc, char *argv[])
 	server_address.sin_port = htons(atoi(port));
 	server_address.sin_addr.s_addr = INADDR_ANY;
 
-	//SET SOCKET OPTIONS FOR TIMEOUT
-	setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));
-
 
 	/* Bind the Port */
 	connection_status = bind(network_socket, (struct sockaddr*)&server_address,sizeof(server_address));
 	checkConnectionStatus(connection_status);
+
+	/* WAIT FOR CLIENT TO SEND OUTPUT FILE NAME */
+	bzero(streamBuffer,BUFSIZE);
+	connection_status = recvfrom(network_socket,streamBuffer,BUFSIZE,0,(struct sockaddr *)&clientaddr,&clientlen);
+	int i;
+	for(i=0;i<strlen(streamBuffer);i++)
+	{
+		outputFileName[i] = streamBuffer[i];
+	}
+	outputFileName[i] = '\0';
+
+
+	//SET SOCKET OPTIONS FOR TIMEOUT
+	setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));
 
 
 	clientlen = sizeof(clientaddr);
