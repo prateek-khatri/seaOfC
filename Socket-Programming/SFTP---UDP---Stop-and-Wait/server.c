@@ -10,7 +10,7 @@
 
 typedef struct frame
 {
-	char payLoad[11];
+	char payload[11];
 	int checksum;
 	int sequenceNumber;
 	int nextSeqNumber;
@@ -38,7 +38,7 @@ int main(int argc,char *argv[])
 {
 	if(argc < 2)
 	{
-		perror("Usage: <portNumber> <outputFileName>");
+		printError("Usage: <portNumber> <outputFileName>");
 	}
 
 	frame messageFrame;
@@ -54,7 +54,7 @@ int main(int argc,char *argv[])
 	char * const sendMessage = (char*)malloc(sizeof(char)*1);
 	char * const receivedPayload = (char*)malloc(sizeof(char)*11);
 
-	connection_status = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
+	network_socket = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 	if(connection_status == -1)
 	{
 		printError("Unable to Create Socket!\n");
@@ -65,7 +65,7 @@ int main(int argc,char *argv[])
 
 	//FILL IN THE SERVER STRUCTURE
 	server_address.sin_family = AF_INET;
-	server_address.port = htons(atoi(portNumber));
+	server_address.sin_port = htons(atoi(portNumber));
 	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	//BIND SOCKET
@@ -103,9 +103,10 @@ int main(int argc,char *argv[])
 		printf("***********************\n");
 
 		//WRITE DATA TO FILE IF CHECKSUM IS FINE
-		fwrite(receivedPayload,1,connection_status,outputFile);
+		fwrite(receivedPayload,sizeof(char),strlen(receivedPayload),outputFile);
 
 		//SEND ACK TO CLIENT
+		printf("Sending ACK for SEQ: %d\n",messageFrame.sequenceNumber);
 		if(messageFrame.sequenceNumber == 0)
 		{
 			strcpy(sendMessage,"0");
@@ -116,8 +117,11 @@ int main(int argc,char *argv[])
 		}
 		sendto(network_socket,sendMessage,1,0,(struct sockaddr*) &client_address,structure_length);
 
+		printf("***********************\n");
+		printf("***********************\n");
+
 		memset(messageFrame.payload,'\0',11);
-		memeset(receivedPayload,'\0',11);
+		memset(receivedPayload,'\0',11);
 
 	}
 
