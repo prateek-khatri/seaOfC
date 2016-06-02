@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <stdbool.h>
 
+#define MUTATE_FREQ 23
+
 int findLength(char const * const inputFile)
 {
     FILE * fp = fopen(inputFile,"r");
@@ -23,6 +25,14 @@ typedef struct frame
     int sequenceNumber;
     int nextSeqNumber;
 } frame;
+
+void mutator(frame *messageFrame,int counter)
+{
+    if(counter % MUTATE_FREQ == 0)
+    {
+        messageFrame->checksum = -1;
+    }
+}
 
 
 void printError(char *msg)
@@ -108,6 +118,7 @@ int main(int argc,char *argv[])
     //DO ALL THE SHIZZLE WIZZLE HERE
     while(n=fread(messageFrame.payLoad,1,10,file_pointer))
     {
+        counter++;
         printf("BYTES READ: %d\n",n);
         printf("************\n");
 
@@ -130,6 +141,8 @@ int main(int argc,char *argv[])
             messageFrame.nextSeqNumber = 0;
         }
 
+        mutator(&messageFrame,counter);
+
 RESEND:
         printf("Sending Packet Seq: %d to server...........%d\n",messageFrame.sequenceNumber,counter);
         printf("DATA: %s, %d\n",messageFrame.payLoad,checksum);
@@ -149,6 +162,7 @@ RESEND:
         {
             printf("NO ACK RECEIVED!!\n");
             printf("Attempting RESEND.....!!!\n");
+            messageFrame.checksum = checksum;
             goto RESEND;
         }
         if(n<10) break;
