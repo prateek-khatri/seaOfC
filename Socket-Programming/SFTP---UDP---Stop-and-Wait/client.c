@@ -63,7 +63,6 @@ int main(int argc,char *argv[])
     char const * const serverIP = argv[3];
     char const * const outputFile = argv[2];
     char const * const inputFile = argv[1];
-    char * const inputFileData= (char*)malloc(sizeof(char)*11);
     char * const tempBuffer =(char*)malloc(sizeof(char)*5);
     FILE *file_pointer;
     file_pointer = fopen(inputFile,"rb");
@@ -107,14 +106,16 @@ int main(int argc,char *argv[])
     messageFrame.nextSeqNumber = 0;
 
     //DO ALL THE SHIZZLE WIZZLE HERE
-    while(n=fread(inputFileData,sizeof(char),10,file_pointer))
+    while(n=fread(messageFrame.payLoad,1,10,file_pointer))
     {
-        
+        printf("BYTES READ: %d\n",n);
+        printf("************\n");
 
-        memset(messageFrame.payLoad,'\0',11);
+        
         memset(tempBuffer,'\0',5);
-        strncpy(messageFrame.payLoad,inputFileData,n);
-        checksum = generateChecksum(inputFileData,sizeof(inputFileData));
+        //strcpy(messageFrame.payLoad,inputFileData);
+        //checksum = generateChecksum(inputFileData,sizeof(inputFileData));
+        checksum = generateChecksum(messageFrame.payLoad,10);
         messageFrame.checksum = checksum;
 
         //TOGGLE THE SEQUENCES FOR SENDING
@@ -146,10 +147,12 @@ RESEND:
         }
         else //TIMEOUT or WRONG SEQUENCE
         {
+            printf("NO ACK RECEIVED!!\n");
+            printf("Attempting RESEND.....!!!\n");
             goto RESEND;
         }
         if(n<10) break;
-
+        memset(messageFrame.payLoad,'\0',11);
 
     }
 
@@ -159,7 +162,6 @@ RESEND:
     messageFrame.payLoad[3] = 't';
     messageFrame.payLoad[4] = '\0';
     sendto(network_socket,&messageFrame,sizeof(messageFrame),0,(struct sockaddr*) &server_address,sizeof(server_address));
-    free(inputFileData);
     free(tempBuffer);
     close(network_socket);
 
