@@ -8,7 +8,7 @@
 
 int findLength(char const * const inputFile)
 {
-    FILE * fp = fopen(inputFile,"r");
+    FILE * fp = fopen(inputFile,"rb");
     fseek(fp,0,SEEK_END);
     int length = ftell(fp);
     fseek(fp,0,SEEK_SET);
@@ -66,15 +66,7 @@ int main(int argc,char *argv[])
 	char * const inputFileData= (char*)malloc(sizeof(char)*11);
 	char * const tempBuffer =(char*)malloc(sizeof(char)*5);
 	FILE *file_pointer;
-
-    //TEST VARIABLES
-    /*
-    int inputFileLength = findLength(inputFile);
-    char *wholeFileData = (char*)malloc(sizeof(char)*inputFileLength);
     file_pointer = fopen(inputFile,"rb");
-    fread(wholeFileData,inputFileLength,1,file_pointer);
-    */
-
 
 	/* CREATE UDP SOCKET */
 	network_socket =socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -106,7 +98,6 @@ int main(int argc,char *argv[])
     //Initialize Counter
     counter =0;
 
-    
     int n;
 
 
@@ -115,10 +106,8 @@ int main(int argc,char *argv[])
     messageFrame.nextSeqNumber = 0;
 
     //DO ALL THE SHIZZLE WIZZLE HERE
-    while(n=fread(inputFileData,sizeof(char),10,file_pointer))
+    while((n=fread(inputFileData,1,10,file_pointer)) > 0)
     {
-        
-
         memset(messageFrame.payLoad,'\0',11);
     	memset(tempBuffer,'\0',5);
     	strncpy(messageFrame.payLoad,inputFileData,n);
