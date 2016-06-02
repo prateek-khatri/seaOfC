@@ -101,7 +101,15 @@ int main(int argc,char *argv[])
 		printf("***********************\n");
 
 		//WRITE DATA TO FILE IF CHECKSUM IS FINE
-		fwrite(messageFrame.payload,sizeof(char),strlen(messageFrame.payload),outputFile);
+		if(outputFileName[strlen(outputFileName)-3] == 't' && outputFileName[strlen(outputFileName)-2] == 'x' && outputFileName[strlen(outputFileName)-1] == 't')
+		{
+			fwrite(messageFrame.payload,sizeof(char),strlen(messageFrame.payload),outputFile);
+		}
+		else
+		{
+			fwrite(messageFrame.payload,sizeof(char),10,outputFile);
+		}
+		
 
 		//SEND ACK TO CLIENT
 		printf("Sending ACK for SEQ: %d\n",messageFrame.sequenceNumber);
