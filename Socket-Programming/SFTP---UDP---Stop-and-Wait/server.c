@@ -45,6 +45,7 @@ int main(int argc,char *argv[])
 	int network_socket;
 	int connection_status;
 	struct sockaddr_in server_address,client_address;
+	struct timeval tv;
 	int structure_length = sizeof(client_address);
 	FILE *outputFile;
 	char *outputFileName = argv[2];
@@ -52,6 +53,7 @@ int main(int argc,char *argv[])
 	//DATA MEMBERS FOR COMPARISON
 	int checksum = 0;
 	char * const sendMessage = (char*)malloc(sizeof(char)*1);
+	int prevSeq = 1;
 
 	network_socket = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 	if(connection_status == -1)
@@ -76,6 +78,13 @@ int main(int argc,char *argv[])
 
 	outputFile = fopen(outputFileName,"wb");
 
+	/* Set Timeout */   
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+
+    /* Set socket option to timeout on recvfrom */
+    setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(struct timeval));
+
 
 	//START THE RECEPTION LOOP
 	while(1)
@@ -94,6 +103,25 @@ int main(int argc,char *argv[])
 			//WAIT FOR RETRANSMISSION AND DO NOT SEND ACK
 			printf("CHECKSUM MISMATCH!!\n");
 			continue;
+		}
+
+		/*** SEQUENCE CHECK ************/
+		if(prevSeq == messageFrame.sequenceNumber)
+		{
+			//SEND PREVIOUS ACK
+			if(prevSeq == 0)
+			{
+				strcpy(sendMessage,"0");
+			}
+			else if(prevSeq == 1)
+			{
+				strcpy(sendMessage,"1");
+			}
+			printf("****SEQUENCE MISMATCH!\n");
+			printf("****RESENDING ACK %d\n",prevSeq);
+			sendto(network_socket,sendMessage,1,0,(struct sockaddr*) &client_address,structure_length);
+			continue;
+
 		}
 
 		printf("Received Data: %s\n",messageFrame.payload);
@@ -116,10 +144,12 @@ int main(int argc,char *argv[])
 		if(messageFrame.sequenceNumber == 0)
 		{
 			strcpy(sendMessage,"0");
+			prevSeq = 0;
 		}
 		else if(messageFrame.sequenceNumber == 1)
 		{
 			strcpy(sendMessage,"1");
+			prevSeq = 1;
 		}
 		sendto(network_socket,sendMessage,1,0,(struct sockaddr*) &client_address,structure_length);
 
