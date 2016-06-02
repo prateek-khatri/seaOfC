@@ -52,7 +52,6 @@ int main(int argc,char *argv[])
 	//DATA MEMBERS FOR COMPARISON
 	int checksum = 0;
 	char * const sendMessage = (char*)malloc(sizeof(char)*1);
-	char * const receivedPayload = (char*)malloc(sizeof(char)*11);
 
 	network_socket = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 	if(connection_status == -1)
@@ -89,21 +88,21 @@ int main(int argc,char *argv[])
 			break;
 		}
 
-		strcpy(receivedPayload,messageFrame.payload);
-		checksum = generateChecksum(receivedPayload,sizeof(receivedPayload));
+		checksum = generateChecksum(messageFrame.payload,10);
 		if(checksum != messageFrame.checksum)
 		{
 			//WAIT FOR RETRANSMISSION AND DO NOT SEND ACK
-			printf("CHECKSUM MISMATCH!!\n");
+			printf("Received Data: %s\n",messageFrame.payload);
+			printf("CHECKSUM MISMATCH!! - %d\n",checksum);
 			continue;
 		}
 
-		printf("Received Data: %s\n",receivedPayload);
+		printf("Received Data: %s\n",messageFrame.payload);
 		printf("Message Verified! Writing to File...\n");
 		printf("***********************\n");
 
 		//WRITE DATA TO FILE IF CHECKSUM IS FINE
-		fwrite(receivedPayload,sizeof(char),strlen(receivedPayload),outputFile);
+		fwrite(messageFrame.payload,1,10,outputFile);
 
 		//SEND ACK TO CLIENT
 		printf("Sending ACK for SEQ: %d\n",messageFrame.sequenceNumber);
@@ -121,7 +120,6 @@ int main(int argc,char *argv[])
 		printf("***********************\n");
 
 		memset(messageFrame.payload,'\0',11);
-		memset(receivedPayload,'\0',11);
 
 	}
 
@@ -129,7 +127,6 @@ int main(int argc,char *argv[])
 	close(network_socket);
 	fclose(outputFile);
 	free(sendMessage);
-	free(receivedPayload);
 
 	return 0;
 
