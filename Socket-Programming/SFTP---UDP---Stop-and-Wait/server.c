@@ -8,164 +8,128 @@
 #include <stdbool.h>
 
 
-/* GLOBAL DEFINISIONS */
-#define BUFSIZE 100
-#define TIMEOUT 5
-bool state = false; // FALSE = PACKET 0 , TRUE = PACKET 1
+typedef struct frame
+{
+	char payLoad[11];
+	int checksum;
+	int sequenceNumber;
+	int nextSeqNumber;
+} frame;
 
+int generateChecksum(char *buffer,int len)
+{
+	char *buf = buffer;
+	int checksum = 0;
+	int i;
+	for(i=0;i<len;i++)
+	{
+		checksum += (unsigned int)(buf[i]);
+	}
+	return checksum;
+}
 
+void printError(char *msg)
+{
+	perror(msg);
+	exit(1);
+}
 
-/*FUNCTION PROTOTYPES */
-void checkConnectionStatus(int connection_status);
-bool checkTimeout(int connection_status);
-void printError(char *a);
-bool checkSequence(char *streamBuffer);
-bool validateChecksum(char *streamBuffer);
-void writeChunk(char *streamBuffer);
-void sendACK();
-void resendACK();
-
-
-
-int main(int argc, char *argv[])
+int main(int argc,char *argv[])
 {
 	if(argc < 2)
 	{
-		printError("Usage: ./server <port>");
+		perror("Usage: <portNumber> <outputFileName>");
 	}
 
-	printf("Server Started...");
-	printf("Waiting for Datagrams!\n");
-
-	/*NETWORK VARIABLS */
+	frame messageFrame;
 	int network_socket;
 	int connection_status;
-	struct sockaddr_in server_address;
-	struct sockaddr_in clientaddr;
-	struct timeval tv;
-	int clientlen;
-	char outputFileName[30];
-	char const * const port = argv[1];
-	char streamBuffer[BUFSIZE];
+	struct sockaddr_in server_address,client_address;
+	int structure_length = sizeof(client_address);
+	FILE *outputFile;
+	char *outputFileName = argv[2];
+	char * portNumber = argv[1];
+	//DATA MEMBERS FOR COMPARISON
+	int checksum = 0;
+	char * const sendMessage = (char*)malloc(sizeof(char)*1);
+	char * const receivedPayload = (char*)malloc(sizeof(char)*11);
 
-	//SET TIMEOUT VALUE
-	tv.tv_sec = TIMEOUT;
-	tv.tv_usec = 0;
-
-	/*Create a Socket */
-	network_socket = socket(AF_INET,SOCK_DGRAM,0);
-	checkConnectionStatus(network_socket);
-
-	/* FILL IN SERVER STRUCTURE */
-	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(atoi(port));
-	server_address.sin_addr.s_addr = INADDR_ANY;
-
-
-	/* Bind the Port */
-	connection_status = bind(network_socket, (struct sockaddr*)&server_address,sizeof(server_address));
-	checkConnectionStatus(connection_status);
-
-	/* WAIT FOR CLIENT TO SEND OUTPUT FILE NAME */
-	bzero(streamBuffer,BUFSIZE);
-	connection_status = recvfrom(network_socket,streamBuffer,BUFSIZE,0,(struct sockaddr *)&clientaddr,&clientlen);
-	int i;
-	for(i=0;i<strlen(streamBuffer);i++)
+	connection_status = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
+	if(connection_status == -1)
 	{
-		outputFileName[i] = streamBuffer[i];
+		printError("Unable to Create Socket!\n");
 	}
-	outputFileName[i] = '\0';
+
+	//CLEAR SERVER STRUCTURE
+	memset((char*) &server_address,0,sizeof(server_address));
+
+	//FILL IN THE SERVER STRUCTURE
+	server_address.sin_family = AF_INET;
+	server_address.port = htons(atoi(portNumber));
+	server_address.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	//BIND SOCKET
+	connection_status = bind(network_socket,(struct sockaddr*) &server_address,sizeof(server_address));
+	if(connection_status == -1)
+	{
+		perror("Cannot Bind Port\n!");
+	}
+
+	outputFile = fopen(outputFileName,"wb");
 
 
-	//SET SOCKET OPTIONS FOR TIMEOUT
-	setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));
-
-
-	clientlen = sizeof(clientaddr);
-
-	/* Here the server begins to wait for datagrams and serves them */
+	//START THE RECEPTION LOOP
 	while(1)
 	{
-
-		bzero(streamBuffer,BUFSIZE);
-		connection_status = recvfrom(network_socket, streamBuffer,BUFSIZE,0,(struct sockaddr *) &clientaddr, &clientlen);
-
-		if(checkTimeout(connection_status))
+		printf("Waiting for Data...\n");
+		connection_status = recvfrom(network_socket,&messageFrame,sizeof(messageFrame),0,(struct sockaddr *) &client_address,&structure_length);
+		if(strcmp(messageFrame.payload,"exit") == 0)
 		{
-			//This means tha the client did not recieve and ACK
-			//We need to resend ACK and wait again
-			printf("Timeout...resending ACK!\n");
-			resendACK();
+			printf("Data Transmission Completed...!\n");
+			break;
+		}
+
+		strcpy(receivedPayload,messageFrame.payload);
+		checksum = generateChecksum(receivedPayload,sizeof(receivedPayload));
+		if(checksum != messageFrame.checksum)
+		{
+			//WAIT FOR RETRANSMISSION AND DO NOT SEND ACK
+			printf("CHECKSUM MISMATCH!!\n");
 			continue;
 		}
 
-		if(!checkSequence(streamBuffer))
-		{
-			//The packet is out of sequence, means our ACK was not recevied
-			// We need to resend old ACK and expect the next packet in sequence.
-			printf("[ 1 ] Packet Received out of Sequence!\n");
-			printf("[ 1 ] Resending ACK to Receive correct packet...\n");
-			resendACK();
-			continue;
-		}
-		if(!validateChecksum(streamBuffer))
-		{
-			//This means there is an error in the packet
-			// We need to not send ACK and wait for the same packet.
-			printf("[ 2 ] Checksum Error...wait for retransmission!\n");
-			continue;
-		}
+		printf("Received Data: %s\n",receivedPayload);
+		printf("Message Verified! Writing to File...\n");
+		printf("***********************\n");
 
-		//Everything was checked out, we can go ahead and write the chunk to file.
-		writeChunk(streamBuffer);
+		//WRITE DATA TO FILE IF CHECKSUM IS FINE
+		fwrite(receivedPayload,1,connection_status,outputFile);
 
-		//Send ACK for the packet written to file - CHANGE SEQ STATE 1 or 0
-		sendACK();
+		//SEND ACK TO CLIENT
+		if(messageFrame.sequenceNumber == 0)
+		{
+			strcpy(sendMessage,"0");
+		}
+		else if(messageFrame.sequenceNumber == 1)
+		{
+			strcpy(sendMessage,"1");
+		}
+		sendto(network_socket,sendMessage,1,0,(struct sockaddr*) &client_address,structure_length);
+
+		memset(messageFrame.payload,'\0',11);
+		memeset(receivedPayload,'\0',11);
 
 	}
+
+	//CLEANUP CODE
+	close(network_socket);
+	fclose(outputFile);
+	free(sendMessage);
+	free(receivedPayload);
 
 	return 0;
-}
-void writeChunk(char * streamBuffer)
-{
 
-}
-bool checkSequence(char * streamBuffer)
-{
-	return true;
-}
-bool validateChecksum(char * streamBuffer)
-{
-	return true;
-}
-bool checkTimeout(int connection_status)
-{
-	if(connection_status <= 0)
-	{
-		return true;
-	}
-	return false;
-}
-void sendACK()
-{
-	return;
-}
-void resendACK()
-{
-	return;
-}
+	
 
 
-void checkConnectionStatus(int connection_status)
-{
-	if(connection_status < 0)
-	{
-		printError("Fail to Establish Socket or Connection!\n");
-	}
-}
-
-void printError(char * a)
-{
-	perror(a);
-	exit(1);
 }
