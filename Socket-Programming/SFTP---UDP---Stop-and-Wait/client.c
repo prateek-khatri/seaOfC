@@ -6,7 +6,15 @@
 #include <netinet/in.h>
 #include <stdbool.h>
 
-
+int findLength(char const * const inputFile)
+{
+    FILE * fp = fopen(inputFile,"r");
+    fseek(fp,0,SEEK_END);
+    int length = ftell(fp);
+    fseek(fp,0,SEEK_SET);
+    fclose(fp);
+    return length;
+}
 
 typedef struct frame
 {
@@ -53,11 +61,20 @@ int main(int argc,char *argv[])
 	struct timeval tv;
 	char const * const port = argv[4];
 	char const * const serverIP = argv[3];
-	char * outputFile = argv[2];
+	char const * const outputFile = argv[2];
 	char const * const inputFile = argv[1];
-	char *inputFileData;
-	char *tempBuffer;
+	char * const inputFileData= (char*)malloc(sizeof(char)*11);
+	char * const tempBuffer =(char*)malloc(sizeof(char)*5);
 	FILE *file_pointer;
+
+    //TEST VARIABLES
+    /*
+    int inputFileLength = findLength(inputFile);
+    char *wholeFileData = (char*)malloc(sizeof(char)*inputFileLength);
+    file_pointer = fopen(inputFile,"rb");
+    fread(wholeFileData,inputFileLength,1,file_pointer);
+    */
+
 
 	/* CREATE UDP SOCKET */
 	network_socket =socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -86,12 +103,10 @@ int main(int argc,char *argv[])
     /* Set socket option to timeout on recvfrom */
     setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(struct timeval));
 
-    /*Allocate Buffers */
-    inputFileData = (char*)malloc(sizeof(char)*11);
-    tempBuffer = (char*)malloc(sizeof(char)*5);
+    //Initialize Counter
     counter =0;
 
-    file_pointer = fopen(inputFile,"rb");
+    
     int n;
 
 
@@ -100,8 +115,11 @@ int main(int argc,char *argv[])
     messageFrame.nextSeqNumber = 0;
 
     //DO ALL THE SHIZZLE WIZZLE HERE
-    while(n=fread(inputFileData,1,10,file_pointer))
+    while(n=fread(inputFileData,sizeof(char),10,file_pointer))
     {
+        
+
+        memset(messageFrame.payLoad,'\0',11);
     	memset(tempBuffer,'\0',5);
     	strncpy(messageFrame.payLoad,inputFileData,n);
     	checksum = generateChecksum(inputFileData,sizeof(inputFileData));
@@ -120,26 +138,37 @@ int main(int argc,char *argv[])
     	}
 
 RESEND:
-    	printf("Sending Packet Seq: %d to server...........%d\n",messageFrame.sequenceNumber,counter+1);
+    	printf("Sending Packet Seq: %d to server...........%d\n",messageFrame.sequenceNumber,counter);
+        printf("DATA: %s, %d\n",messageFrame.payLoad,checksum);
     	sendto(network_socket,&messageFrame,sizeof(messageFrame),0,(struct sockaddr*) &server_address,sizeof(server_address));
+        counter++;
 
     	int received_bytes = recvfrom(network_socket,tempBuffer,1,0,(struct sockaddr*) &server_address,&structure_lenght);
     	if(strcmp(tempBuffer,"0") == 0 && messageFrame.sequenceNumber== 0)
     	{
     		printf("RECEIVED: ACK 0\n\n");
-    		continue;
     	}
     	else if(strcmp(tempBuffer,"1") == 0 && messageFrame.sequenceNumber== 1)
     	{
     		printf("RECEIVED: ACK 1\n\n");
-    		continue;
     	}
     	else //TIMEOUT or WRONG SEQUENCE
     	{
     		goto RESEND;
     	}
+        if(n<10) break;
 
 
     }
+
+    messageFrame.payLoad[0] = 'e';
+    messageFrame.payLoad[1] = 'x';
+    messageFrame.payLoad[2] = 'i';
+    messageFrame.payLoad[3] = 't';
+    messageFrame.payLoad[4] = '\0';
+    sendto(network_socket,&messageFrame,sizeof(messageFrame),0,(struct sockaddr*) &server_address,sizeof(server_address));
+    free(inputFileData);
+    free(tempBuffer);
+    close(network_socket);
 
 }
