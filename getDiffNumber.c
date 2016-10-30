@@ -11,17 +11,14 @@ int  gettingDiffNumber(int arr[], int n)
 {     
       uint8_t hash[n+1] = {0};
       
-      // CASE 0
      if (n == INT_MAX) return -1;
-   
-      // CASE 1: 
-      for (uint32_t i = 0; i < n; i++)
+
+     for (uint32_t i = 0; i < n; i++)
       {
          if (arr[i] < n+1)
          {
             hash[arr[i]] = 1;
          }
-
       }
   
       for (uint32_t i = 0; i < n+1; i++)
@@ -31,7 +28,5 @@ int  gettingDiffNumber(int arr[], int n)
             return i;
          }
       }
-      
       return -1;
-
 }
